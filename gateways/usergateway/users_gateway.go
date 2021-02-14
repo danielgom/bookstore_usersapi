@@ -3,6 +3,7 @@ package usergateway
 import (
 	"fmt"
 	"github.com/danielgom/bookstore_usersapi/domain/users"
+	"github.com/danielgom/bookstore_usersapi/utils/dateutils"
 	"github.com/danielgom/bookstore_usersapi/utils/errors"
 )
 
@@ -26,6 +27,7 @@ func Save(u *users.User) *errors.RestErr {
 		}
 		return errors.NewBadRequestError(fmt.Sprintf("User %d already exists", u.Id))
 	}
+	u.DateCreated = dateutils.GetNowMxString()
 	usersDB[u.Id] = u
 	return nil
 }
