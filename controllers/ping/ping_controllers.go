@@ -5,6 +5,6 @@ import (
 	"net/http"
 )
 
-func Ping(c *gin.Context) {
-	c.String(http.StatusOK, "Ping")
+func Health(c *gin.Context) {
+	c.JSON(http.StatusOK, map[string]string{"Status": "UP"})
 }

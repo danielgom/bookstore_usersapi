@@ -7,12 +7,12 @@ import (
 
 func mapUrls() {
 
-	router.GET("/ping", ping.Ping)
+	router.GET("/health", ping.Health)
 
 	router.POST("/users", users.Create)
 	router.GET("/users/:userId", users.GetById)
 	router.PUT("/users/:userId", users.Update)
-	router.PATCH("/users/:userId", users.Update)
+	router.PATCH("/users/:userId", users.UpdatePartial)
 	router.DELETE("/users/:userId", users.Delete)
 
 	// These endpoints are going to be internal

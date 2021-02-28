@@ -3,20 +3,25 @@ package services
 import (
 	"github.com/danielgom/bookstore_usersapi/domain/users"
 	"github.com/danielgom/bookstore_usersapi/gateways/usergateway"
+	"github.com/danielgom/bookstore_usersapi/utils/cryptoutils"
 	"github.com/danielgom/bookstore_usersapi/utils/errors"
 	"time"
 )
 
-// Use this if we do not enable negative user ids
+var UserService userServiceInterface = &userService{}
 
-func validId(id int64) *errors.RestErr {
-	if id < 0 {
-		return errors.NewBadRequestError("Invalid user id: user id should not be negative")
-	}
-	return nil
+type userService struct{}
+
+type userServiceInterface interface {
+	GetUserById(int64) (*users.User, *errors.RestErr)
+	CreateUser(*users.User) (*users.User, *errors.RestErr)
+	UpdateUser(*users.User) (*users.User, *errors.RestErr)
+	UpdateUserPartial(*users.User) (*users.User, *errors.RestErr)
+	DeleteUser(int64) *errors.RestErr
+	Search(string) (users.Users, *errors.RestErr)
 }
 
-func GetUserById(uId int64) (*users.User, *errors.RestErr) {
+func (s *userService) GetUserById(uId int64) (*users.User, *errors.RestErr) {
 
 	restErr := validId(uId)
 	if restErr != nil {
@@ -30,14 +35,15 @@ func GetUserById(uId int64) (*users.User, *errors.RestErr) {
 	return user, nil
 }
 
-func CreateUser(u *users.User) (*users.User, *errors.RestErr) {
+func (s *userService) CreateUser(u *users.User) (*users.User, *errors.RestErr) {
 
-	if err := u.Validate(); err != nil {
+	if err := u.Validate(true); err != nil {
 		return nil, err
 	}
 
 	u.Status = users.StatusInactive
 	u.DateCreated = time.Now()
+	u.Password = cryptoutils.Encrypt(u.Password)
 
 	if err := usergateway.Save(u); err != nil {
 		return nil, err
@@ -46,25 +52,42 @@ func CreateUser(u *users.User) (*users.User, *errors.RestErr) {
 	return u, nil
 }
 
-func UpdateUser(isPartial bool, u *users.User) (*users.User, *errors.RestErr) {
-	current, err := GetUserById(u.Id)
+func (s *userService) UpdateUser(u *users.User) (*users.User, *errors.RestErr) {
+
+	if err := u.Validate(false); err != nil {
+		return nil, err
+	}
+
+	current, err := s.GetUserById(u.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	if isPartial {
-		if u.FirstName != "" {
-			current.FirstName = u.FirstName
-		}
-		if u.LastName != "" {
-			current.LastName = u.LastName
-		}
-		if u.Email != "" {
-			current.Email = u.Email
-		}
-	} else {
+	current.FirstName = u.FirstName
+	current.LastName = u.LastName
+	current.Email = u.Email
+
+	if err = usergateway.Update(current); err != nil {
+		return nil, err
+	}
+
+	return current, nil
+}
+
+func (s *userService) UpdateUserPartial(u *users.User) (*users.User, *errors.RestErr) {
+
+	current, err := s.GetUserById(u.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if u.FirstName != "" {
 		current.FirstName = u.FirstName
+	}
+	if u.LastName != "" {
 		current.LastName = u.LastName
+	}
+	if u.Email != "" {
 		current.Email = u.Email
 	}
 
@@ -75,7 +98,7 @@ func UpdateUser(isPartial bool, u *users.User) (*users.User, *errors.RestErr) {
 	return current, nil
 }
 
-func DeleteUser(uId int64) *errors.RestErr {
+func (s *userService) DeleteUser(uId int64) *errors.RestErr {
 	restErr := validId(uId)
 	if restErr != nil {
 		return restErr
@@ -84,11 +107,18 @@ func DeleteUser(uId int64) *errors.RestErr {
 	return usergateway.Delete(uId)
 }
 
-func Search(s string) ([]users.User, *errors.RestErr) {
-	usersList, restErr := usergateway.FindByStatus(s)
+func (s *userService) Search(st string) (users.Users, *errors.RestErr) {
+	usersList, restErr := usergateway.FindByStatus(st)
 	if restErr != nil {
 		return nil, restErr
 	}
 
 	return usersList, nil
+}
+
+func validId(id int64) *errors.RestErr {
+	if id < 0 {
+		return errors.NewBadRequestError("Invalid user id: user id should not be negative")
+	}
+	return nil
 }
