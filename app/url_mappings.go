@@ -14,6 +14,7 @@ func mapUrls() {
 	router.PUT("/users/:userId", users.Update)
 	router.PATCH("/users/:userId", users.UpdatePartial)
 	router.DELETE("/users/:userId", users.Delete)
+	router.POST("/users/login", users.Login)
 
 	// These endpoints are going to be internal
 	internal := router.Group("/internal")

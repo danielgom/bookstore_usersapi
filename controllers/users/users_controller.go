@@ -1,9 +1,10 @@
 package users
 
 import (
+	"github.com/danielgom/bookstore_oauth-go/oauth"
 	"github.com/danielgom/bookstore_usersapi/domain/users"
 	"github.com/danielgom/bookstore_usersapi/services"
-	"github.com/danielgom/bookstore_usersapi/utils/errors"
+	"github.com/danielgom/bookstore_utils-go/errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
@@ -19,18 +20,29 @@ func getUserId(uIdParam string) (int64, *errors.RestErr) {
 
 func GetById(c *gin.Context) {
 
+	if err := oauth.AuthenticateRequest(c.Request); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
 	id, idErr := getUserId(c.Param("userId"))
 	if idErr != nil {
 		c.JSON(idErr.Status, idErr)
 		return
 	}
 
-	r, getErr := services.UserService.GetUserById(id)
+	u, getErr := services.UserService.GetUserById(id)
 	if getErr != nil {
 		c.JSON(getErr.Status, getErr)
 		return
 	}
-	c.JSON(http.StatusOK, r.Marshaller(c.GetHeader("X-Public") == "true"))
+
+	if oauth.GetCallerId(c.Request) == u.Id {
+		c.JSON(http.StatusOK, u.Marshaller(false))
+		return
+	}
+
+	c.JSON(http.StatusOK, u.Marshaller(oauth.IsPublic(c.Request)))
 
 }
 
@@ -132,4 +144,22 @@ func FindByStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, userList.Marshaller(c.GetHeader("X-Public") == "true"))
+}
+
+func Login(c *gin.Context) {
+	request := new(users.UserLoginRequest)
+
+	if err := c.ShouldBindJSON(request); err != nil {
+		restErr := errors.NewBadRequestError("Invalid json body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
+
+	user, err := services.UserService.LoginUser(request)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, user.Marshaller(c.GetHeader("X-Public") == "true"))
 }

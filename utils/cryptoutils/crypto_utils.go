@@ -12,3 +12,13 @@ func Encrypt(in string) string {
 	}
 	return string(password)
 }
+
+func VerifyPassword(hashedPwd, plainPwd string) bool {
+	byteHash := []byte(hashedPwd)
+	bytePass := []byte(plainPwd)
+
+	if err := bcrypt.CompareHashAndPassword(byteHash, bytePass); err != nil {
+		return false
+	}
+	return true
+}

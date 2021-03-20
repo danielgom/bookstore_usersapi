@@ -2,10 +2,11 @@ package usergateway
 
 import (
 	"context"
+	"fmt"
 	"github.com/danielgom/bookstore_usersapi/datasource/postgresql/usersdb"
 	"github.com/danielgom/bookstore_usersapi/domain/users"
 	"github.com/danielgom/bookstore_usersapi/logger"
-	"github.com/danielgom/bookstore_usersapi/utils/errors"
+	"github.com/danielgom/bookstore_utils-go/errors"
 )
 
 const (
@@ -13,10 +14,11 @@ const (
     users_db.users("firstName", "lastName", "email", "dateCreated", "password", "status")
 	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`
 
-	queryGetUserById      = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE id=$1`
-	queryUpdateUser       = `UPDATE users_db.users SET "firstName"=$1, "lastName"=$2, "email"=$3 WHERE id=$4`
-	queryDeleteUser       = `DELETE FROM users_db.users WHERE id=$1`
-	queryFindUserByStatus = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE status=$1`
+	queryGetUserById            = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE id=$1`
+	queryUpdateUser             = `UPDATE users_db.users SET "firstName"=$1, "lastName"=$2, "email"=$3 WHERE id=$4`
+	queryDeleteUser             = `DELETE FROM users_db.users WHERE id=$1`
+	queryFindByStatus           = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE status=$1`
+	queryFindByEmailAndPassword = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status", "password" FROM users_db.users WHERE email=$1 AND status=$2`
 )
 
 func Get(uId int64) (*users.User, *errors.RestErr) {
@@ -76,7 +78,7 @@ func Delete(uId int64) *errors.RestErr {
 }
 
 func FindByStatus(s string) (users.Users, *errors.RestErr) {
-	rows, findErr := usersdb.Client.Query(context.Background(), queryFindUserByStatus, s)
+	rows, findErr := usersdb.Client.Query(context.Background(), queryFindByStatus, s)
 	if findErr != nil {
 		logger.Error("Error when trying to find the users by status", findErr.Error())
 		return nil, errors.NewInternalServerError("Database error")
@@ -95,4 +97,19 @@ func FindByStatus(s string) (users.Users, *errors.RestErr) {
 	}
 
 	return uList, nil
+}
+
+func FindByEmailAndPassword(email string) (*users.User, *errors.RestErr) {
+
+	var u users.User
+
+	getErr := usersdb.Client.QueryRow(context.Background(), queryFindByEmailAndPassword, email, users.StatusInactive).Scan(&u.Id,
+		&u.FirstName, &u.LastName, &u.Email, &u.DateCreated, &u.Status, &u.Password)
+
+	if getErr != nil {
+		logger.Error("Error when trying to get user by email and password", getErr.Error())
+		return nil, errors.NewNotFoundError(fmt.Sprintf("User with Email %s not found", email))
+	}
+
+	return &u, nil
 }

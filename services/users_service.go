@@ -4,7 +4,7 @@ import (
 	"github.com/danielgom/bookstore_usersapi/domain/users"
 	"github.com/danielgom/bookstore_usersapi/gateways/usergateway"
 	"github.com/danielgom/bookstore_usersapi/utils/cryptoutils"
-	"github.com/danielgom/bookstore_usersapi/utils/errors"
+	"github.com/danielgom/bookstore_utils-go/errors"
 	"time"
 )
 
@@ -19,6 +19,7 @@ type userServiceInterface interface {
 	UpdateUserPartial(*users.User) (*users.User, *errors.RestErr)
 	DeleteUser(int64) *errors.RestErr
 	Search(string) (users.Users, *errors.RestErr)
+	LoginUser(*users.UserLoginRequest) (*users.User, *errors.RestErr)
 }
 
 func (s *userService) GetUserById(uId int64) (*users.User, *errors.RestErr) {
@@ -108,12 +109,21 @@ func (s *userService) DeleteUser(uId int64) *errors.RestErr {
 }
 
 func (s *userService) Search(st string) (users.Users, *errors.RestErr) {
-	usersList, restErr := usergateway.FindByStatus(st)
-	if restErr != nil {
-		return nil, restErr
+	return usergateway.FindByStatus(st)
+
+}
+
+func (s *userService) LoginUser(logReq *users.UserLoginRequest) (*users.User, *errors.RestErr) {
+	user, err := usergateway.FindByEmailAndPassword(logReq.Email)
+	if err != nil {
+		return nil, err
 	}
 
-	return usersList, nil
+	if !cryptoutils.VerifyPassword(user.Password, logReq.Password) {
+		return nil, errors.NewBadRequestError("Invalid user credentials")
+	}
+
+	return user, nil
 }
 
 func validId(id int64) *errors.RestErr {
@@ -122,3 +132,4 @@ func validId(id int64) *errors.RestErr {
 	}
 	return nil
 }
+

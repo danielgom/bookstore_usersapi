@@ -1,7 +1,7 @@
 package users
 
 import (
-	"github.com/danielgom/bookstore_usersapi/utils/errors"
+	"github.com/danielgom/bookstore_utils-go/errors"
 	"regexp"
 	"strings"
 	"time"

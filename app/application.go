@@ -16,7 +16,7 @@ func StartApplication() {
 
 	mapUrls()
 
-	err := router.Run(":8080")
+	err := router.Run(":8081")
 	if err != nil {
 		log.Fatal(err)
 	}
