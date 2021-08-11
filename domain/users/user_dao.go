@@ -26,7 +26,7 @@ type Users []User
 
 // Avoid breaking a solid principle by letting the user to validate itself
 
-func (u *User) Validate(create bool) *errors.RestErr {
+func (u *User) Validate(create bool) errors.RestErr {
 
 	if strings.TrimSpace(u.FirstName) == "" {
 		return errors.NewBadRequestError("First name field cannot be empty")

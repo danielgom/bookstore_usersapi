@@ -14,14 +14,14 @@ const (
     users_db.users("firstName", "lastName", "email", "dateCreated", "password", "status")
 	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id;`
 
-	queryGetUserById            = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE id=$1`
-	queryUpdateUser             = `UPDATE users_db.users SET "firstName"=$1, "lastName"=$2, "email"=$3 WHERE id=$4`
-	queryDeleteUser             = `DELETE FROM users_db.users WHERE id=$1`
-	queryFindByStatus           = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE status=$1`
-	queryFindByEmailAndPassword = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status", "password" FROM users_db.users WHERE email=$1 AND status=$2`
+	queryGetUserById  = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE id=$1`
+	queryUpdateUser   = `UPDATE users_db.users SET "firstName"=$1, "lastName"=$2, "email"=$3 WHERE id=$4`
+	queryDeleteUser   = `DELETE FROM users_db.users WHERE id=$1`
+	queryFindByStatus = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status" FROM users_db.users WHERE status=$1`
+	queryFindByEmail  = `SELECT "id", "firstName", "lastName", "email", "dateCreated", "status", "password" FROM users_db.users WHERE email=$1 AND status=$2`
 )
 
-func Get(uId int64) (*users.User, *errors.RestErr) {
+func Get(uId int64) (*users.User, errors.RestErr) {
 
 	var u users.User
 
@@ -32,13 +32,13 @@ func Get(uId int64) (*users.User, *errors.RestErr) {
 
 	if getErr != nil {
 		logger.Error("Error when trying to get user by id", getErr.Error())
-		return nil, errors.NewInternalServerError("Database error")
+		return nil, errors.NewInternalServerError("Database error", getErr)
 	}
 
 	return &u, nil
 }
 
-func Save(u *users.User) *errors.RestErr {
+func Save(u *users.User) errors.RestErr {
 
 	// By design postgres will always generate a new Id even if the query fails
 
@@ -47,41 +47,41 @@ func Save(u *users.User) *errors.RestErr {
 
 	if saveErr != nil {
 		logger.Error("Error when trying to save the user", saveErr.Error())
-		return errors.NewInternalServerError("Database error")
+		return errors.NewInternalServerError("Database error", saveErr)
 	}
 
 	return nil
 }
 
-func Update(u *users.User) *errors.RestErr {
+func Update(u *users.User) errors.RestErr {
 	query, updateErr := usersdb.Client.Query(context.Background(),
 		queryUpdateUser, u.FirstName, u.LastName, u.Email, u.Id)
 
 	if updateErr != nil {
 		logger.Error("Error when trying to update the user", updateErr.Error())
-		return errors.NewInternalServerError("Database error")
+		return errors.NewInternalServerError("Database error", updateErr)
 	}
 
 	defer query.Close()
 	return nil
 }
 
-func Delete(uId int64) *errors.RestErr {
+func Delete(uId int64) errors.RestErr {
 	query, deleteErr := usersdb.Client.Query(context.Background(), queryDeleteUser, uId)
 	if deleteErr != nil {
 		logger.Error("Error when trying to delete the user", deleteErr.Error())
-		return errors.NewInternalServerError("Error when trying to delete the user")
+		return errors.NewInternalServerError("Error when trying to delete the user", deleteErr)
 	}
 
 	defer query.Close()
 	return nil
 }
 
-func FindByStatus(s string) (users.Users, *errors.RestErr) {
+func FindByStatus(s string) (users.Users, errors.RestErr) {
 	rows, findErr := usersdb.Client.Query(context.Background(), queryFindByStatus, s)
 	if findErr != nil {
 		logger.Error("Error when trying to find the users by status", findErr.Error())
-		return nil, errors.NewInternalServerError("Database error")
+		return nil, errors.NewInternalServerError("Database error", findErr)
 	}
 
 	defer rows.Close()
@@ -91,7 +91,7 @@ func FindByStatus(s string) (users.Users, *errors.RestErr) {
 		var u users.User
 		if findErr = rows.Scan(&u.Id, &u.FirstName, &u.LastName, &u.Email, &u.DateCreated, &u.Status); findErr != nil {
 			logger.Error("Error when trying to scan the rows into users struct", findErr.Error())
-			return nil, errors.NewInternalServerError("Database error")
+			return nil, errors.NewInternalServerError("Database error", findErr)
 		}
 		uList = append(uList, u)
 	}
@@ -99,11 +99,11 @@ func FindByStatus(s string) (users.Users, *errors.RestErr) {
 	return uList, nil
 }
 
-func FindByEmailAndPassword(email string) (*users.User, *errors.RestErr) {
+func FindByEmail(email string) (*users.User, errors.RestErr) {
 
 	var u users.User
 
-	getErr := usersdb.Client.QueryRow(context.Background(), queryFindByEmailAndPassword, email, users.StatusInactive).Scan(&u.Id,
+	getErr := usersdb.Client.QueryRow(context.Background(), queryFindByEmail, email, users.StatusInactive).Scan(&u.Id,
 		&u.FirstName, &u.LastName, &u.Email, &u.DateCreated, &u.Status, &u.Password)
 
 	if getErr != nil {

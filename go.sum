@@ -9,8 +9,12 @@ github.com/danielgom/bookstore_oauth-go v0.0.0-20210320024424-b12c63e75572 h1:+v
 github.com/danielgom/bookstore_oauth-go v0.0.0-20210320024424-b12c63e75572/go.mod h1:SrZ/VtfLGRLBHoizdh0AxrCr0C1o4ispzjNda7tjrEc=
 github.com/danielgom/bookstore_oauth-go v1.0.1 h1:D+CCiyx6hS5WJ8DAzEQJHh6H5HZ43n8hW+Mm872byr0=
 github.com/danielgom/bookstore_oauth-go v1.0.1/go.mod h1:SrZ/VtfLGRLBHoizdh0AxrCr0C1o4ispzjNda7tjrEc=
+github.com/danielgom/bookstore_oauth-go v1.0.2-0.20210502225403-a57f9a0a544c h1:s9GX1e0NjMs+svoNoUThAaLii6EhwHRf/LSgzUwdCbs=
+github.com/danielgom/bookstore_oauth-go v1.0.2-0.20210502225403-a57f9a0a544c/go.mod h1:Y4VY++sGKVNN6JHZVpaa/K4QlnG0hVdXkjIZLDoofso=
 github.com/danielgom/bookstore_utils-go v0.0.0-20210319032152-56cd20c27daf h1:4wvd1VH9gaii0FmLAUISTf2vBep2x9vqg3m/81pG3nI=
 github.com/danielgom/bookstore_utils-go v0.0.0-20210319032152-56cd20c27daf/go.mod h1:9fetZj4iX4uImUrj4KCpMG3cVYhXJugOu04FZx1uYEI=
+github.com/danielgom/bookstore_utils-go v0.0.0-20210502224501-f568d5553e1e h1:OYGjK1Q6j3HV/ILBx3V9+nK0BtHjyPj5sFN83NYjX/U=
+github.com/danielgom/bookstore_utils-go v0.0.0-20210502224501-f568d5553e1e/go.mod h1:YzZxjsZzVjSpukxw5gTE3WnzIOcxbgG0+revt0DwB3k=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

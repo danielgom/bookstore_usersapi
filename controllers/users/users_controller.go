@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-func getUserId(uIdParam string) (int64, *errors.RestErr) {
+func getUserId(uIdParam string) (int64, errors.RestErr) {
 	pInt, err := strconv.ParseInt(uIdParam, 10, 64)
 	if err != nil {
 		return 0, errors.NewBadRequestError("User id should be a valid number")
@@ -21,19 +21,19 @@ func getUserId(uIdParam string) (int64, *errors.RestErr) {
 func GetById(c *gin.Context) {
 
 	if err := oauth.AuthenticateRequest(c.Request); err != nil {
-		c.JSON(err.Status, err)
+		c.JSON(err.Status(), err)
 		return
 	}
 
 	id, idErr := getUserId(c.Param("userId"))
 	if idErr != nil {
-		c.JSON(idErr.Status, idErr)
+		c.JSON(idErr.Status(), idErr)
 		return
 	}
 
 	u, getErr := services.UserService.GetUserById(id)
 	if getErr != nil {
-		c.JSON(getErr.Status, getErr)
+		c.JSON(getErr.Status(), getErr)
 		return
 	}
 
@@ -51,14 +51,14 @@ func Create(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errors.NewBadRequestError("Invalid json body")
-		c.JSON(restErr.Status, restErr)
+		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
 	r, saveErr := services.UserService.CreateUser(&user)
 
 	if saveErr != nil {
-		c.JSON(saveErr.Status, saveErr)
+		c.JSON(saveErr.Status(), saveErr)
 		return
 	}
 	c.JSON(http.StatusCreated, r.Marshaller(c.GetHeader("X-Public") == "true"))
@@ -68,7 +68,7 @@ func Update(c *gin.Context) {
 
 	userId, idErr := getUserId(c.Param("userId"))
 	if idErr != nil {
-		c.JSON(idErr.Status, idErr)
+		c.JSON(idErr.Status(), idErr)
 		return
 	}
 
@@ -76,7 +76,7 @@ func Update(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errors.NewBadRequestError("Invalid json body")
-		c.JSON(restErr.Status, restErr)
+		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
@@ -84,7 +84,7 @@ func Update(c *gin.Context) {
 
 	r, updateErr := services.UserService.UpdateUser(&user)
 	if updateErr != nil {
-		c.JSON(updateErr.Status, updateErr)
+		c.JSON(updateErr.Status(), updateErr)
 		return
 	}
 
@@ -94,7 +94,7 @@ func Update(c *gin.Context) {
 func UpdatePartial(c *gin.Context) {
 	userId, idErr := getUserId(c.Param("userId"))
 	if idErr != nil {
-		c.JSON(idErr.Status, idErr)
+		c.JSON(idErr.Status(), idErr)
 		return
 	}
 
@@ -102,7 +102,7 @@ func UpdatePartial(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&user); err != nil {
 		restErr := errors.NewBadRequestError("Invalid json body")
-		c.JSON(restErr.Status, restErr)
+		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
@@ -110,7 +110,7 @@ func UpdatePartial(c *gin.Context) {
 
 	r, partUpdateErr := services.UserService.UpdateUserPartial(&user)
 	if partUpdateErr != nil {
-		c.JSON(partUpdateErr.Status, partUpdateErr)
+		c.JSON(partUpdateErr.Status(), partUpdateErr)
 		return
 	}
 
@@ -121,12 +121,12 @@ func UpdatePartial(c *gin.Context) {
 func Delete(c *gin.Context) {
 	id, idErr := getUserId(c.Param("userId"))
 	if idErr != nil {
-		c.JSON(idErr.Status, idErr)
+		c.JSON(idErr.Status(), idErr)
 		return
 	}
 
 	if deleteErr := services.UserService.DeleteUser(id); deleteErr != nil {
-		c.JSON(deleteErr.Status, deleteErr)
+		c.JSON(deleteErr.Status(), deleteErr)
 		return
 	}
 
@@ -139,7 +139,7 @@ func FindByStatus(c *gin.Context) {
 	userList, err := services.UserService.Search(status)
 
 	if err != nil {
-		c.JSON(err.Status, err)
+		c.JSON(err.Status(), err)
 		return
 	}
 
@@ -147,17 +147,18 @@ func FindByStatus(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
+
 	request := new(users.UserLoginRequest)
 
 	if err := c.ShouldBindJSON(request); err != nil {
 		restErr := errors.NewBadRequestError("Invalid json body")
-		c.JSON(restErr.Status, restErr)
+		c.JSON(restErr.Status(), restErr)
 		return
 	}
 
 	user, err := services.UserService.LoginUser(request)
 	if err != nil {
-		c.JSON(err.Status, err)
+		c.JSON(err.Status(), err)
 		return
 	}
 
